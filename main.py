@@ -1,3 +1,4 @@
+import base64
 import json
 import logging
 import os
@@ -28,9 +29,9 @@ app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 
 # OAuth configuration
 oauth = OAuth()
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID") or os.getenv("GOOGLE_OAUTH_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET") or os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
+BASE_URL = os.getenv("BASE_URL") or os.getenv("RENDER_EXTERNAL_URL") or "http://127.0.0.1:8000"
 
 if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
     oauth.register(
@@ -49,25 +50,22 @@ def startup_event():
     logger.info("Starting Trip Dreams app")
     logger.info(f"OAUTH_ENABLED={OAUTH_ENABLED}, BASE_URL={BASE_URL}, SESSION_SECRET_SET={bool(SECRET_KEY)}")
 
-if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
-    oauth.register(
-        name="google",
-        client_id=GOOGLE_CLIENT_ID,
-        client_secret=GOOGLE_CLIENT_SECRET,
-        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-        client_kwargs={"scope": "openid email profile"},
-    )
-
-OAUTH_ENABLED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
-
 
 def create_firestore_client() -> firestore.Client:
     credentials_json = os.getenv("GOOGLE_CREDENTIALS_JSON") or os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
     if credentials_json:
+        credentials_info = None
         try:
             credentials_info = json.loads(credentials_json)
-        except json.JSONDecodeError as error:
-            raise RuntimeError("GOOGLE_CREDENTIALS_JSON or GOOGLE_APPLICATION_CREDENTIALS_JSON must contain valid JSON") from error
+        except json.JSONDecodeError:
+            try:
+                decoded = base64.b64decode(credentials_json).decode("utf-8")
+                credentials_info = json.loads(decoded)
+            except Exception as error:
+                raise RuntimeError(
+                    "GOOGLE_CREDENTIALS_JSON or GOOGLE_APPLICATION_CREDENTIALS_JSON must contain valid JSON "
+                    "or base64-encoded JSON"
+                ) from error
 
         credentials = service_account.Credentials.from_service_account_info(credentials_info)
         project_id = credentials_info.get("project_id") or os.getenv("FIRESTORE_PROJECT_ID")
