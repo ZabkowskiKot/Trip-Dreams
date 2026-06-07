@@ -42,15 +42,15 @@ OAUTH_ENABLED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
 
 
 def create_firestore_client() -> firestore.Client:
-    credentials_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
+    credentials_json = os.getenv("GOOGLE_CREDENTIALS_JSON") or os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
     if credentials_json:
         try:
             credentials_info = json.loads(credentials_json)
         except json.JSONDecodeError as error:
-            raise RuntimeError("GOOGLE_CREDENTIALS_JSON must contain valid JSON") from error
+            raise RuntimeError("GOOGLE_CREDENTIALS_JSON or GOOGLE_APPLICATION_CREDENTIALS_JSON must contain valid JSON") from error
 
         credentials = service_account.Credentials.from_service_account_info(credentials_info)
-        project_id = credentials_info.get("project_id")
+        project_id = credentials_info.get("project_id") or os.getenv("FIRESTORE_PROJECT_ID")
         return firestore.Client(project=project_id, credentials=credentials)
 
     return firestore.Client()
