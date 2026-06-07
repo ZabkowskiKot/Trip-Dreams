@@ -5,6 +5,10 @@ const dreamsContainer = document.getElementById('dreams');
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const authNotice = document.getElementById('authNotice');
+const userPanel = document.getElementById('userPanel');
+const userName = document.getElementById('userName');
+const userEmail = document.getElementById('userEmail');
+const userId = document.getElementById('userId');
 
 function renderDreams(dreams) {
   if (!dreams || dreams.length === 0) {
@@ -67,9 +71,19 @@ async function checkAuth() {
     if (auth.logged_in) {
       loginBtn.style.display = 'none';
       logoutBtn.style.display = 'inline-block';
+      authNotice.textContent = `Signed in as ${auth.user?.name || auth.user?.email || 'a Google user'}.`;
+      if (userPanel) {
+        userPanel.style.display = 'block';
+        userName.textContent = auth.user?.name ? `Name: ${auth.user.name}` : '';
+        userEmail.textContent = auth.user?.email ? `Email: ${auth.user.email}` : '';
+        userId.textContent = auth.user?.sub ? `Google ID: ${auth.user.sub}` : '';
+      }
     } else {
       loginBtn.style.display = 'inline-block';
       logoutBtn.style.display = 'none';
+      if (userPanel) {
+        userPanel.style.display = 'none';
+      }
     }
   } catch (e) {
     // ignore
