@@ -125,18 +125,22 @@ async def auth(request: Request):
         )
     try:
         token = await oauth.google.authorize_access_token(request)
+        logger.info("OAuth token received")
     except Exception as exc:
         logger.exception("Failed to authorize access token")
         raise HTTPException(status_code=400, detail="Failed to authorize") from exc
 
     user = None
     try:
-        user = await oauth.google.parse_id_token(request, token)
-    except Exception:
-        # fallback to userinfo endpoint
+        user = await oauth.google.parse_id_token(token)
+        logger.info("Parsed ID token successfully")
+    except Exception as exc:
+        logger.warning("parse_id_token failed, falling back to userinfo: %s", exc)
         try:
-            user = await oauth.google.userinfo(request)
-        except Exception:
+            user = await oauth.google.userinfo(token=token)
+            logger.info("Fetched userinfo successfully")
+        except Exception as exc2:
+            logger.exception("Failed to fetch userinfo")
             user = None
 
     if user is None:
