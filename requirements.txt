@@ -6,3 +6,4 @@ pydantic
 authlib
 python-dotenv
 itsdangerous
+httpx
