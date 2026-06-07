@@ -1,16 +1,15 @@
 import json
+import logging
 import os
 import pathlib
 import time
 from typing import List
 
-from fastapi import Request
-from fastapi.responses import RedirectResponse
+from fastapi import Request, FastAPI, HTTPException
+from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from google.cloud import firestore
 from google.oauth2 import service_account
 from pydantic import BaseModel, Field
@@ -18,16 +17,37 @@ from pydantic import BaseModel, Field
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("trip-dreams")
+
 
 # Session middleware
 SECRET_KEY = os.getenv("SESSION_SECRET", os.getenv("SECRET_KEY", "dev-secret-change-me"))
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
+
 
 # OAuth configuration
 oauth = OAuth()
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
+
+if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
+    oauth.register(
+        name="google",
+        client_id=GOOGLE_CLIENT_ID,
+        client_secret=GOOGLE_CLIENT_SECRET,
+        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+        client_kwargs={"scope": "openid email profile"},
+    )
+
+OAUTH_ENABLED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+
+
+@app.on_event("startup")
+def startup_event():
+    logger.info("Starting Trip Dreams app")
+    logger.info(f"OAUTH_ENABLED={OAUTH_ENABLED}, BASE_URL={BASE_URL}, SESSION_SECRET_SET={bool(SECRET_KEY)}")
 
 if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
     oauth.register(
@@ -72,7 +92,7 @@ local_dreams = []
 
 class DreamItem(BaseModel):
     location: str = Field(..., min_length=1)
-    priority: str = Field(..., pattern="^(High|Medium|Low)$")
+    priority: str = Field(..., regex="^(High|Medium|Low)$")
     budget: int = Field(..., ge=0)
 
 
@@ -88,24 +108,28 @@ def read_root():
 @app.get("/login")
 async def login(request: Request):
     if not OAUTH_ENABLED:
+        logger.warning("OAuth login attempted while Google credentials are missing")
         return HTMLResponse(
             "<h1>Google OAuth is not configured</h1><p>Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your environment.</p>",
-            status_code=500,
+            status_code=400,
         )
     redirect_uri = f"{BASE_URL.rstrip('/')}/auth"
+    logger.info(f"Redirecting user to Google OAuth with redirect URI: {redirect_uri}")
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 @app.get("/auth")
 async def auth(request: Request):
     if not OAUTH_ENABLED:
+        logger.warning("OAuth callback attempted while Google credentials are missing")
         return HTMLResponse(
             "<h1>Google OAuth is not configured</h1><p>Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your environment.</p>",
-            status_code=500,
+            status_code=400,
         )
     try:
         token = await oauth.google.authorize_access_token(request)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Failed to authorize")
+    except Exception as exc:
+        logger.exception("Failed to authorize access token")
+        raise HTTPException(status_code=400, detail="Failed to authorize") from exc
 
     user = None
     try:
@@ -138,7 +162,12 @@ def api_me(request: Request):
 
 @app.get("/api/config")
 def api_config():
-    return {"oauth_enabled": OAUTH_ENABLED}
+    return {
+        "oauth_enabled": OAUTH_ENABLED,
+        "base_url": BASE_URL,
+        "google_client_id_set": bool(GOOGLE_CLIENT_ID),
+        "google_client_secret_set": bool(GOOGLE_CLIENT_SECRET),
+    }
 
 
 @app.get("/api/hello")
