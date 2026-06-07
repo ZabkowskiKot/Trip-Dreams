@@ -38,6 +38,9 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
         client_kwargs={"scope": "openid email profile"},
     )
 
+OAUTH_ENABLED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+
+
 def create_firestore_client() -> firestore.Client:
     credentials_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
     if credentials_json:
@@ -84,15 +87,21 @@ def read_root():
     return html_path.read_text(encoding="utf-8")
 @app.get("/login")
 async def login(request: Request):
-    if "google" not in oauth:
-        raise HTTPException(status_code=500, detail="Google OAuth not configured")
+    if not OAUTH_ENABLED:
+        return HTMLResponse(
+            "<h1>Google OAuth is not configured</h1><p>Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your environment.</p>",
+            status_code=500,
+        )
     redirect_uri = f"{BASE_URL.rstrip('/')}/auth"
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 @app.get("/auth")
 async def auth(request: Request):
-    if "google" not in oauth:
-        raise HTTPException(status_code=500, detail="Google OAuth not configured")
+    if not OAUTH_ENABLED:
+        return HTMLResponse(
+            "<h1>Google OAuth is not configured</h1><p>Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your environment.</p>",
+            status_code=500,
+        )
     try:
         token = await oauth.google.authorize_access_token(request)
     except Exception:
@@ -125,6 +134,11 @@ def api_me(request: Request):
     if not user:
         return {"logged_in": False}
     return {"logged_in": True, "user": user}
+
+
+@app.get("/api/config")
+def api_config():
+    return {"oauth_enabled": OAUTH_ENABLED}
 
 
 @app.get("/api/hello")

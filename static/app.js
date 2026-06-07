@@ -4,6 +4,7 @@ const dreamForm = document.getElementById('dreamForm');
 const dreamsContainer = document.getElementById('dreams');
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
+const authNotice = document.getElementById('authNotice');
 
 function renderDreams(dreams) {
   if (!dreams || dreams.length === 0) {
@@ -52,9 +53,18 @@ async function fetchDreams() {
 
 async function checkAuth() {
   try {
-    const res = await fetch('/api/me');
-    const info = await res.json();
-    if (info.logged_in) {
+    const [configRes, authRes] = await Promise.all([fetch('/api/config'), fetch('/api/me')]);
+    const config = await configRes.json();
+    const auth = await authRes.json();
+
+    if (!config.oauth_enabled) {
+      loginBtn.style.display = 'none';
+      logoutBtn.style.display = 'none';
+      authNotice.textContent = 'Google OAuth is currently disabled. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your environment to enable login.';
+      return;
+    }
+
+    if (auth.logged_in) {
       loginBtn.style.display = 'none';
       logoutBtn.style.display = 'inline-block';
     } else {
