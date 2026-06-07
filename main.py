@@ -46,7 +46,7 @@ local_dreams = []
 
 class DreamItem(BaseModel):
     location: str = Field(..., min_length=1)
-    priority: str = Field(..., regex="^(High|Medium|Low)$")
+    priority: str = Field(..., pattern="^(High|Medium|Low)$")
     budget: int = Field(..., ge=0)
 
 
