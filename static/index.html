@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trip Dreams</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="hero-shell">
+      <nav class="topbar">
+        <div class="brand">Trip Dreams</div>
+        <div class="nav-links">
+          <a href="#features">Features</a>
+          <a href="#planner">Planner</a>
+          <a href="#roadmap">Roadmap</a>
+        </div>
+      </nav>
+
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">Group Travel, Reimagined</span>
+          <h1>Turn dream trips into shared plans.</h1>
+          <p>Build travel ideas, compare budgets, and prepare your group for the perfect calendar-ready getaway.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#planner">Start Planning</a>
+            <button class="button secondary" id="apiButton">Test API</button>
+          </div>
+          <div class="hero-stats">
+            <div>
+              <strong>4</strong>
+              <span>Future stages</span>
+            </div>
+            <div>
+              <strong>1</strong>
+              <span>Live API endpoint</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-panel">
+          <div class="panel-card">
+            <h2>Dreams in progress</h2>
+            <p class="panel-copy">Add a destination, set a priority, and save a quick budget estimate.</p>
+            <div class="panel-item">
+              <span>Maldives</span>
+              <strong>High</strong>
+            </div>
+            <div class="panel-item">
+              <span>Tuscany</span>
+              <strong>Medium</strong>
+            </div>
+            <div class="panel-item">
+              <span>Kyoto</span>
+              <strong>Low</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <main class="page-content">
+      <section id="features" class="features-grid">
+        <article class="feature-card">
+          <h3>Dream Planner</h3>
+          <p>Collect destinations, budgets, and priorities for every trip idea.</p>
+        </article>
+        <article class="feature-card">
+          <h3>Group Collaboration</h3>
+          <p>Design the app for group profiles and shared planning across friends.</p>
+        </article>
+        <article class="feature-card">
+          <h3>Calendar Sync</h3>
+          <p>Later, connect Google Calendar availability to reveal shared free weekends.</p>
+        </article>
+        <article class="feature-card">
+          <h3>Trip Summary</h3>
+          <p>Create a clean post-trip dashboard for sharing highlights and group memories.</p>
+        </article>
+      </section>
+
+      <section id="planner" class="planner-section card">
+        <div class="planner-header">
+          <div>
+            <h2>Dream Planner</h2>
+            <p>Enter a location, pick a priority, and set a quick estimated budget.</p>
+          </div>
+          <div class="hint">Guest browsing is okay; saving will require login later.</div>
+        </div>
+
+        <form id="dreamForm" class="planner-form">
+          <label>
+            Destination
+            <input id="location" type="text" placeholder="e.g. Lisbon, Portugal" required />
+          </label>
+          <label>
+            Priority
+            <select id="priority">
+              <option value="High">High</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </label>
+          <label>
+            Estimated budget
+            <input id="budget" type="number" placeholder="2000" min="0" required />
+          </label>
+          <button type="submit" class="button primary">Add dream</button>
+        </form>
+
+        <div class="dreams-list card">
+          <h3>Dream List</h3>
+          <div id="dreams" class="dream-items">
+            <p class="empty-state">No dreams added yet. Add your first destination to see it here.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="roadmap" class="roadmap card">
+        <h2>What to build next</h2>
+        <ul>
+          <li><strong>Save trips to MongoDB</strong> with a secure backend model.</li>
+          <li><strong>Google OAuth</strong> so users can save data only when logged in.</li>
+          <li><strong>Group features</strong> for shared planning between friends.</li>
+          <li><strong>Calendar syncing</strong> to map availability across members.</li>
+        </ul>
+      </section>
+
+      <section class="api-card card">
+        <h2>API test</h2>
+        <p>Use the button to confirm the backend is running.</p>
+        <button id="apiButtonAlt" class="button secondary">Call API</button>
+        <div id="apiResult" class="result"></div>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
