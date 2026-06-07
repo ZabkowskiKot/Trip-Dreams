@@ -169,6 +169,8 @@ def api_config():
         "base_url": BASE_URL,
         "google_client_id_set": bool(GOOGLE_CLIENT_ID),
         "google_client_secret_set": bool(GOOGLE_CLIENT_SECRET),
+        "use_firestore": USE_FIRESTORE,
+        "firestore_available": dreams_collection is not None,
     }
 
 

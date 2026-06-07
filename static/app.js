@@ -5,10 +5,17 @@ const dreamsContainer = document.getElementById('dreams');
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const authNotice = document.getElementById('authNotice');
-const userPanel = document.getElementById('userPanel');
+const settingsStatus = document.getElementById('settingsStatus');
+const accountDetails = document.getElementById('accountDetails');
 const userName = document.getElementById('userName');
 const userEmail = document.getElementById('userEmail');
 const userId = document.getElementById('userId');
+const darkModeToggle = document.getElementById('darkModeToggle');
+const oauthStatus = document.getElementById('oauthStatus');
+const baseUrlDisplay = document.getElementById('baseUrlDisplay');
+const storageMode = document.getElementById('storageMode');
+
+const DARK_MODE_KEY = 'trip-dreams-dark-mode';
 
 function renderDreams(dreams) {
   if (!dreams || dreams.length === 0) {
@@ -29,6 +36,25 @@ function renderDreams(dreams) {
     `
     )
     .join('');
+}
+
+function applyDarkMode(enabled) {
+  document.body.classList.toggle('theme-dark', enabled);
+  localStorage.setItem(DARK_MODE_KEY, enabled ? 'true' : 'false');
+}
+
+async function loadAppConfig() {
+  try {
+    const response = await fetch('/api/config');
+    const config = await response.json();
+    oauthStatus.textContent = config.oauth_enabled ? 'Enabled' : 'Disabled';
+    baseUrlDisplay.textContent = config.base_url || 'Not set';
+    storageMode.textContent = config.firestore_available ? 'Firestore' : 'Local browser storage';
+  } catch (error) {
+    oauthStatus.textContent = 'Unavailable';
+    baseUrlDisplay.textContent = 'Unavailable';
+    storageMode.textContent = 'Unavailable';
+  }
 }
 
 async function handleApiCall() {
@@ -71,19 +97,18 @@ async function checkAuth() {
     if (auth.logged_in) {
       loginBtn.style.display = 'none';
       logoutBtn.style.display = 'inline-block';
-      authNotice.textContent = `Signed in as ${auth.user?.name || auth.user?.email || 'a Google user'}.`;
-      if (userPanel) {
-        userPanel.style.display = 'block';
-        userName.textContent = auth.user?.name ? `Name: ${auth.user.name}` : '';
-        userEmail.textContent = auth.user?.email ? `Email: ${auth.user.email}` : '';
-        userId.textContent = auth.user?.sub ? `Google ID: ${auth.user.sub}` : '';
-      }
+      settingsStatus.textContent = 'You are signed in with Google.';
+      accountDetails.style.display = 'block';
+      userName.textContent = auth.user?.name ? `Name: ${auth.user.name}` : '';
+      userEmail.textContent = auth.user?.email ? `Email: ${auth.user.email}` : '';
+      userId.textContent = auth.user?.sub ? `Google ID: ${auth.user.sub}` : '';
+      authNotice.textContent = `Signed in as ${auth.user?.email || 'your Google account'}. Use Log out to disconnect.`;
     } else {
       loginBtn.style.display = 'inline-block';
       logoutBtn.style.display = 'none';
-      if (userPanel) {
-        userPanel.style.display = 'none';
-      }
+      settingsStatus.textContent = 'You are not signed in.';
+      accountDetails.style.display = 'none';
+      authNotice.textContent = 'Log in to save dreams and access your account settings.';
     }
   } catch (e) {
     // ignore
@@ -126,6 +151,18 @@ apiButtons.forEach((button) => {
   button.addEventListener('click', handleApiCall);
 });
 
+darkModeToggle?.addEventListener('change', (event) => {
+  applyDarkMode(event.target.checked);
+});
+
+function loadSettings() {
+  const darkMode = localStorage.getItem(DARK_MODE_KEY) === 'true';
+  darkModeToggle.checked = darkMode;
+  applyDarkMode(darkMode);
+}
+
 dreamForm.addEventListener('submit', handleFormSubmit);
+loadSettings();
 fetchDreams();
+loadAppConfig();
 checkAuth();

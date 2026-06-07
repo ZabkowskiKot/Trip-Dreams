@@ -16,18 +16,15 @@
           <a href="#roadmap">Roadmap</a>
         </div>
         <div class="auth-links">
+          <a href="#features">Features</a>
+          <a href="#planner">Planner</a>
+          <a href="#settings">Settings</a>
+          <a href="#roadmap">Roadmap</a>
           <a id="loginBtn" class="nav-action" href="/login">Log in</a>
           <a id="logoutBtn" class="nav-action" href="/logout" style="display:none">Log out</a>
         </div>
       </nav>
       <div id="authNotice" class="auth-notice"></div>
-      <div id="userPanel" class="user-panel card" style="display:none">
-        <h3>Your account</h3>
-        <p id="userName"></p>
-        <p id="userEmail"></p>
-        <p id="userId"></p>
-        <p class="panel-copy">You are signed in with Google. Use the Log out button to disconnect.</p>
-      </div>
 
       <section class="hero">
         <div class="hero-copy">
@@ -127,9 +124,34 @@
         </div>
       </section>
 
-      <section id="userSettings" class="settings card">
-        <h2>User settings</h2>
-        <p>Account and planner settings will appear here once user preferences and profile controls are implemented.</p>
+      <section id="settings" class="settings card">
+        <h2>Settings panel</h2>
+        <p class="panel-copy">Manage your account session, app preferences, and storage mode from one place.</p>
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h3>Account</h3>
+            <p id="settingsStatus">Checking sign-in status…</p>
+            <div id="accountDetails" class="account-details" style="display:none">
+              <p id="userName"></p>
+              <p id="userEmail"></p>
+              <p id="userId"></p>
+            </div>
+            <p class="panel-copy">If you're signed in, this section shows your Google account details and session state.</p>
+          </div>
+          <div class="settings-card">
+            <h3>Preferences</h3>
+            <label class="setting-field">
+              <span>Enable dark mode</span>
+              <input id="darkModeToggle" type="checkbox" />
+            </label>
+            <div class="setting-info">
+              <div><strong>OAuth:</strong> <span id="oauthStatus">Loading…</span></div>
+              <div><strong>App URL:</strong> <span id="baseUrlDisplay">Loading…</span></div>
+              <div><strong>Storage:</strong> <span id="storageMode">Loading…</span></div>
+            </div>
+            <p class="panel-copy">These settings are stored locally in your browser and will persist for this device.</p>
+          </div>
+        </div>
       </section>
 
       <section id="roadmap" class="roadmap card">
