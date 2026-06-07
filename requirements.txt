@@ -3,3 +3,5 @@ uvicorn[standard]
 aiofiles
 google-cloud-firestore
 pydantic
+authlib
+python-dotenv

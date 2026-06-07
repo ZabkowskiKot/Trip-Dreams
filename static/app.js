@@ -2,6 +2,8 @@ const apiButtons = document.querySelectorAll('#apiButton, #apiButtonAlt');
 const apiResult = document.getElementById('apiResult');
 const dreamForm = document.getElementById('dreamForm');
 const dreamsContainer = document.getElementById('dreams');
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
 
 function renderDreams(dreams) {
   if (!dreams || dreams.length === 0) {
@@ -48,6 +50,22 @@ async function fetchDreams() {
   }
 }
 
+async function checkAuth() {
+  try {
+    const res = await fetch('/api/me');
+    const info = await res.json();
+    if (info.logged_in) {
+      loginBtn.style.display = 'none';
+      logoutBtn.style.display = 'inline-block';
+    } else {
+      loginBtn.style.display = 'inline-block';
+      logoutBtn.style.display = 'none';
+    }
+  } catch (e) {
+    // ignore
+  }
+}
+
 async function handleFormSubmit(event) {
   event.preventDefault();
 
@@ -69,13 +87,14 @@ async function handleFormSubmit(event) {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to save dream');
+      const text = await response.text();
+      throw new Error(text || 'Failed to save dream');
     }
 
     dreamForm.reset();
     fetchDreams();
   } catch (error) {
-    apiResult.textContent = 'Unable to save dream. Check backend or Firestore configuration.';
+    apiResult.textContent = 'Unable to save dream. You may need to log in first.';
   }
 }
 
@@ -85,3 +104,4 @@ apiButtons.forEach((button) => {
 
 dreamForm.addEventListener('submit', handleFormSubmit);
 fetchDreams();
+checkAuth();
