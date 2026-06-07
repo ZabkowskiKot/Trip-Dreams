@@ -6,6 +6,7 @@ import pathlib
 import time
 from typing import List
 
+from dotenv import load_dotenv
 from fastapi import Request, FastAPI, HTTPException
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,6 +15,8 @@ from authlib.integrations.starlette_client import OAuth
 from google.cloud import firestore
 from google.oauth2 import service_account
 from pydantic import BaseModel, Field
+
+load_dotenv()
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
